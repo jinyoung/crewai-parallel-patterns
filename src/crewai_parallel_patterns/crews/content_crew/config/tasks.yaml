@@ -1,0 +1,33 @@
+research_market:
+  description: >
+    Conduct in-depth market research on the {content_topic} landscape.
+    Analyze current trends, key players, emerging technologies, and potential opportunities.
+    The current year is {current_year}.
+  expected_output: >
+    A comprehensive report summarizing the market research findings, including key trends, data points, and insights related to {content_topic}.
+  agent: market_researcher
+
+analyze_feedback:
+  description: >
+    Analyze user feedback collected from various sources (e.g., surveys, social media comments, online reviews) regarding {content_topic}.
+    Identify key themes, sentiment patterns, and areas for improvement in content creation.
+  expected_output: >
+    A summary report of the user feedback analysis, highlighting audience preferences, pain points, content consumption habits, and actionable recommendations.
+  agent: feedback_analyst
+
+generate_ideas:
+  description: >
+    Brainstorm a list of innovative and engaging content ideas related to {content_topic}.
+    Consider the market research findings, user feedback insights, and current industry trends.
+  expected_output: >
+    A list of at least 10 creative content ideas (e.g., blog post topics, video concepts, infographic ideas) that are relevant to {content_topic}, aligned with audience interests, and have the potential to drive engagement.
+  agent: idea_generator
+
+write_content:
+  description: >
+    Write a compelling and informative {content_type} (e.g., blog post, article) on {content_topic}.
+    Incorporate insights from the market research report, user feedback analysis, and the list of generated content ideas.
+    Target the {target_audience} and ensure the content is engaging, well-structured, and SEO-friendly.
+  expected_output: >
+    A well-written, informative, and engaging {content_type} of approximately {word_count} words, ready for publication. The content should be original, address the {content_topic} effectively, and incorporate relevant keywords for SEO.
+  agent: content_writer

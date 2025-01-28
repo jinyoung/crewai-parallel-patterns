@@ -1,0 +1,623 @@
+Directory structure:
+└── /src/
+    └── crewai_parallel_patterns/
+        ├── crews/
+        │   ├── research_crew/
+        │   │   ├── config/
+        │   │   │   ├── agents.yaml
+        │   │   │   └── tasks.yaml
+        │   │   ├── __init__.py
+        │   │   ├── __pycache__/
+        │   │   └── ResearchCrew.py
+        │   ├── __init__.py
+        │   ├── __pycache__/
+        │   └── content_crew/
+        │       ├── config/
+        │       │   ├── agents.yaml
+        │       │   └── tasks.yaml
+        │       ├── __init__.py
+        │       ├── __pycache__/
+        │       └── ContentCrew.py
+        ├── __init__.py
+        ├── __pycache__/
+        ├── main.py
+        └── flows/
+            ├── parallel_listen_flow.py
+            ├── parallel_start_flow.py
+            ├── __init__.py
+            └── __pycache__/
+
+================================================
+File: /crewai_parallel_patterns/crews/research_crew/config/agents.yaml
+================================================
+trend_analyst:
+  role: >
+    {industry_topic} Industry Trend Analyst
+  goal: >
+    Identify and analyze the latest trends in the {industry_topic} industry, focusing on technological advancements, emerging markets, and shifting consumer behaviors.
+    The current year is {current_year}.
+  backstory: >
+    You are a renowned industry trend analyst with a deep understanding of the {industry_topic} sector. You are known for your ability to spot emerging trends and predict their impact on the market.
+
+competitor_analyst:
+  role: >
+    {industry_topic} Competitor Analyst
+  goal: >
+    Research and analyze the strategies of key competitors in the {industry_topic} industry, focusing on their product offerings, marketing campaigns, and market positioning.
+  backstory: >
+    You are a highly skilled competitor analyst specializing in the {industry_topic} industry. You have a keen eye for detail and are adept at identifying competitors' strengths, weaknesses, and market strategies.
+
+================================================
+File: /crewai_parallel_patterns/crews/research_crew/config/tasks.yaml
+================================================
+analyze_trends:
+  description: >
+    Identify and analyze the major trends shaping the {industry_topic} industry.
+    Focus on technological advancements, emerging markets, regulatory changes, and evolving consumer preferences.
+    The current year is {current_year}.
+  expected_output: >
+    A detailed report outlining the key trends in the {industry_topic} industry, supported by data and analysis. The report should highlight the potential impact of these trends on businesses and consumers.
+  agent: trend_analyst
+
+analyze_competitors:
+  description: >
+    Research and analyze the strategies of key competitors in the {industry_topic} industry.
+    Examine their product offerings, marketing campaigns, pricing strategies, distribution channels, and overall market positioning.
+  expected_output: >
+    A comprehensive analysis of the competitive landscape in the {industry_topic} industry. The report should identify key competitors, their strengths and weaknesses, and their strategic approaches to the market.
+  agent: competitor_analyst
+
+================================================
+File: /crewai_parallel_patterns/crews/research_crew/__init__.py
+================================================
+from .ResearchCrew import ResearchCrew
+
+__all__ = ["ResearchCrew"]
+
+
+================================================
+File: /crewai_parallel_patterns/crews/research_crew/ResearchCrew.py
+================================================
+from crewai import Agent, Crew, Process, Task
+from crewai.project import CrewBase, agent, crew, task
+
+@CrewBase
+class ResearchCrew:
+    """Crew for researching industry trends and analyzing competitor strategies."""
+    agents_config = "config/agents.yaml"
+    tasks_config = "config/tasks.yaml"
+
+    @agent
+    def trend_analyst(self) -> Agent:
+        return Agent(
+            config=self.agents_config['trend_analyst'],
+            verbose=True
+        )
+
+    @agent
+    def competitor_analyst(self) -> Agent:
+        return Agent(
+            config=self.agents_config['competitor_analyst'],
+            verbose=True
+        )
+
+    @task
+    def analyze_trends(self) -> Task:
+        return Task(
+            config=self.tasks_config['analyze_trends']
+        )
+
+    @task
+    def analyze_competitors(self) -> Task:
+        return Task(
+            config=self.tasks_config['analyze_competitors']
+        )
+
+    @crew
+    def crew(self) -> Crew:
+        return Crew(
+            agents=[self.trend_analyst(), self.competitor_analyst()],
+            tasks=[self.analyze_trends(), self.analyze_competitors()],
+            process=Process.sequential,
+            verbose=True
+        )
+
+================================================
+File: /crewai_parallel_patterns/crews/content_crew/config/agents.yaml
+================================================
+market_researcher:
+  role: >
+    {content_topic} Market Research Analyst
+  goal: >
+    Conduct thorough research on the {content_topic} market, identifying current trends, key players, and emerging opportunities.
+    The current year is {current_year}.
+  backstory: >
+    You are a highly skilled market research analyst with a deep understanding of the {content_topic} landscape. You are known for your ability to synthesize complex data into actionable insights.
+
+feedback_analyst:
+  role: >
+    {content_topic} User Feedback Analyst
+  goal: >
+    Analyze user feedback from various sources (e.g., surveys, social media) to understand audience preferences, pain points, and content consumption patterns related to {content_topic}.
+  backstory: >
+    You are a user feedback expert specializing in the {content_topic} domain. You excel at identifying sentiment, extracting key themes, and providing recommendations based on user insights.
+
+idea_generator:
+  role: >
+    {content_topic} Content Idea Generator
+  goal: >
+    Brainstorm innovative and engaging content ideas related to {content_topic}, considering the latest trends and user feedback.
+  backstory: >
+    You are a creative thinker with a passion for {content_topic}. You have a knack for generating fresh content ideas that resonate with audiences and drive engagement.
+
+content_writer:
+  role: >
+    {content_topic} Content Writer
+  goal: >
+    Write a compelling and informative content piece (e.g., blog post) on {content_topic}, incorporating insights from market research, user feedback analysis, and idea brainstorming.
+  backstory: >
+    You are a skilled writer with expertise in crafting engaging content related to {content_topic}. You are adept at transforming research and ideas into well-structured, informative, and persuasive narratives.
+
+================================================
+File: /crewai_parallel_patterns/crews/content_crew/config/tasks.yaml
+================================================
+research_market:
+  description: >
+    Conduct in-depth market research on the {content_topic} landscape.
+    Analyze current trends, key players, emerging technologies, and potential opportunities.
+    The current year is {current_year}.
+  expected_output: >
+    A comprehensive report summarizing the market research findings, including key trends, data points, and insights related to {content_topic}.
+  agent: market_researcher
+
+analyze_feedback:
+  description: >
+    Analyze user feedback collected from various sources (e.g., surveys, social media comments, online reviews) regarding {content_topic}.
+    Identify key themes, sentiment patterns, and areas for improvement in content creation.
+  expected_output: >
+    A summary report of the user feedback analysis, highlighting audience preferences, pain points, content consumption habits, and actionable recommendations.
+  agent: feedback_analyst
+
+generate_ideas:
+  description: >
+    Brainstorm a list of innovative and engaging content ideas related to {content_topic}.
+    Consider the market research findings, user feedback insights, and current industry trends.
+  expected_output: >
+    A list of at least 10 creative content ideas (e.g., blog post topics, video concepts, infographic ideas) that are relevant to {content_topic}, aligned with audience interests, and have the potential to drive engagement.
+  agent: idea_generator
+
+write_content:
+  description: >
+    Write a compelling and informative {content_type} (e.g., blog post, article) on {content_topic}.
+    Incorporate insights from the market research report, user feedback analysis, and the list of generated content ideas.
+    Target the {target_audience} and ensure the content is engaging, well-structured, and SEO-friendly.
+  expected_output: >
+    A well-written, informative, and engaging {content_type} of approximately {word_count} words, ready for publication. The content should be original, address the {content_topic} effectively, and incorporate relevant keywords for SEO.
+  agent: content_writer
+
+================================================
+File: /crewai_parallel_patterns/crews/content_crew/__init__.py
+================================================
+from .ContentCrew import ContentCrew
+
+__all__ = ["ContentCrew"]
+
+================================================
+File: /crewai_parallel_patterns/crews/content_crew/ContentCrew.py
+================================================
+from crewai import Agent, Crew, Process, Task
+from crewai.project import CrewBase, agent, crew, task
+
+@CrewBase
+class ContentCrew:
+    """Crew for creating content based on market research, feedback analysis, and brainstorming."""
+    agents_config = "config/agents.yaml"
+    tasks_config = "config/tasks.yaml"
+
+    @agent
+    def market_researcher(self) -> Agent:
+        return Agent(
+            config=self.agents_config['market_researcher'],
+            verbose=True
+        )
+
+    @agent
+    def feedback_analyst(self) -> Agent:
+        return Agent(
+            config=self.agents_config['feedback_analyst'],
+            verbose=True
+        )
+
+    @agent
+    def idea_generator(self) -> Agent:
+        return Agent(
+            config=self.agents_config['idea_generator'],
+            verbose=True
+        )
+
+    @agent
+    def content_writer(self) -> Agent:
+        return Agent(
+            config=self.agents_config['content_writer'],
+            verbose=True
+        )
+
+    @task
+    def research_market(self) -> Task:
+        return Task(
+            config=self.tasks_config['research_market'],
+            async_execution=True
+        )
+
+    @task
+    def analyze_feedback(self) -> Task:
+        return Task(
+            config=self.tasks_config['analyze_feedback'],
+            async_execution=True
+        )
+
+    @task
+    def generate_ideas(self) -> Task:
+        return Task(
+            config=self.tasks_config['generate_ideas'],
+            async_execution=True
+        )
+
+    @task
+    def write_content(self) -> Task:
+        return Task(
+            config=self.tasks_config['write_content'],
+            context=[self.research_market(), self.analyze_feedback(), self.generate_ideas()]
+        )
+
+    @crew
+    def crew(self) -> Crew:
+        return Crew(
+            agents=[self.market_researcher(), self.feedback_analyst(), self.idea_generator(), self.content_writer()],
+            tasks=[self.research_market(), self.analyze_feedback(), self.generate_ideas(), self.write_content()],
+            process=Process.sequential,
+            verbose=True
+        )
+
+================================================
+File: /crewai_parallel_patterns/main.py
+================================================
+#!/usr/bin/env python
+import asyncio
+import warnings
+from datetime import datetime
+
+from crewai_parallel_patterns.crews.content_crew import ContentCrew
+from crewai_parallel_patterns.crews.research_crew import ResearchCrew
+from crewai_parallel_patterns.flows.parallel_start_flow import ParallelStartFlow
+from crewai_parallel_patterns.flows.parallel_listen_flow import ParallelListenFlow
+
+warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
+
+
+async def run_parallel_tasks_in_content_crew():
+    """
+    Demonstrates parallel execution of tasks within the Content Crew using async_execution and context.
+    """
+    print("-" * 50)
+    print("Step 1: Parallel Execution of Tasks in Content Crew")
+
+    content_crew = ContentCrew().crew()
+
+    # Define the inputs for the crew
+    inputs = {
+        "content_topic": "AI in Content Creation",
+        "current_year": "2025",
+        "target_audience": "Marketing professionals",
+        "content_type": "blog post",
+        "word_count": "500",
+    }
+
+    # Kick off the crew asynchronously
+    result = await content_crew.kickoff_async(inputs=inputs)
+    print("\nFinal Output from Content Crew:\n", result.raw)
+    print("-" * 50, "\n")
+
+
+async def run_parallel_execution_of_multiple_crews():
+    """
+    Demonstrates parallel execution of multiple crews using asyncio.gather().
+    """
+    print("-" * 50)
+    print("Step 2: Parallel Execution of Multiple Crews using asyncio.gather()")
+
+    # Define inputs for each crew
+    content_crew_inputs = {
+        "content_topic": "AI in Content Creation",
+        "current_year": "2025",
+        "target_audience": "Marketing professionals",
+        "content_type": "blog post",
+        "word_count": "500",
+    }
+    research_crew_inputs = {
+        "industry_topic": "Artificial Intelligence",
+        "current_year": "2025",
+    }
+
+    # Instantiate crews
+    content_crew = ContentCrew().crew()
+    research_crew = ResearchCrew().crew()
+
+    # Execute crews in parallel
+    results = await asyncio.gather(
+        content_crew.kickoff_async(inputs=content_crew_inputs),
+        research_crew.kickoff_async(inputs=research_crew_inputs),
+    )
+
+    print("\nContent Crew Result:\n", results[0].raw)
+    print("\nResearch Crew Result:\n", results[1].raw)
+    print("-" * 50, "\n")
+
+
+def run_parallel_execution_with_start_flow():
+    """
+    Demonstrates parallel execution of tasks in a flow using @start() methods.
+    """
+    print("-" * 50)
+    print("Step 3: Parallel Execution within Flows using @start()")
+    flow = ParallelStartFlow()
+    final_output = flow.kickoff()
+    print("---- Final Output ----")
+    print(final_output)
+    print("-" * 50, "\n")
+
+
+def run_branching_with_listen_flow():
+    """
+    Demonstrates branching in a flow using @listen decorators.
+    """
+    print("-" * 50)
+    print("Step 4: Branching in a Flow using @listen")
+    flow = ParallelListenFlow()
+    final_output = flow.kickoff()
+    print("---- Final Output ----")
+    print(final_output)
+    print("-" * 50, "\n")
+
+
+async def run_parallel_execution_of_multiple_flows():
+    """
+    Demonstrates parallel execution of multiple flows using asyncio.gather().
+    """
+    print("-" * 50)
+    print("Step 5: Parallel Execution of Multiple Flows using asyncio.gather()")
+
+    # Instantiate flows
+    start_flow = ParallelStartFlow()
+    listen_flow = ParallelListenFlow()
+
+    # Execute flows in parallel
+    results = await asyncio.gather(
+        start_flow.kickoff_async(),
+        listen_flow.kickoff_async(),
+    )
+
+    print("\nParallelStartFlow Result:\n", results[0])
+    print("\nParallelListenFlow Result:\n", results[1])
+    print("-" * 50, "\n")
+
+
+def run():
+    """
+    Orchestrates and demonstrates various parallel execution and branching approaches in CrewAI.
+    """
+    current_year = str(datetime.now().year)
+    print("\n=== Mastering Concurrency and Branching in CrewAI ===\n")
+    print(f"Current Year: {current_year}")
+
+    # Step 1: Run parallel tasks in Content Crew
+    asyncio.run(run_parallel_tasks_in_content_crew())
+
+    # Step 2: Run multiple crews in parallel
+    asyncio.run(run_parallel_execution_of_multiple_crews())
+
+    # Step 3: Run parallel execution in a flow with @start
+    run_parallel_execution_with_start_flow()
+
+    # Step 4: Run branching logic with @listen
+    run_branching_with_listen_flow()
+
+    # Step 5: Run multiple flows in parallel
+    asyncio.run(run_parallel_execution_of_multiple_flows())
+
+
+if __name__ == "__main__":
+    run()
+
+
+================================================
+File: /crewai_parallel_patterns/flows/parallel_listen_flow.py
+================================================
+import asyncio
+
+from crewai.crew import Crew
+from crewai.flow.flow import Flow, and_, listen, router, start
+from pydantic import BaseModel
+
+from ..crews.content_crew import ContentCrew
+from ..crews.research_crew import ResearchCrew
+
+
+# Define a state class to hold data that can be shared/accessed between tasks in the flow
+class ParallelFlowState(BaseModel):
+    market_research_result: str = ""
+    competitor_analysis_result: str = ""
+    content_feedback_result: str = ""
+    combined_output: str = ""
+
+
+class ParallelListenFlow(Flow[ParallelFlowState]):
+    """
+    Flow demonstrating the use of multiple @listen decorators to trigger parallel tasks.
+    """
+
+    def __init__(self):
+        super().__init__(
+            description="This flow triggers tasks in parallel from Research and Content Crews after an initial task is completed.",
+            state_type=ParallelFlowState
+        )
+
+    @start()
+    def initial_task(self):
+        """
+        Simulates an initial task that triggers subsequent tasks.
+        """
+        print("Initial task completed.")
+        return "Initial task completed"
+
+    @listen("initial_task")
+    async def analyze_market(self):
+        """
+        Starts the market research task from the Content Crew, triggered by the initial task.
+        """
+        print("Starting market research task.")
+        market_research_result = await Crew(
+            agents=[ContentCrew().market_researcher()],
+            tasks=[ContentCrew().research_market()]
+        ).kickoff_async(inputs={
+            "content_topic": "AI in Marketing",
+            "current_year": "2025"
+        })
+        self.state.market_research_result = market_research_result.raw if market_research_result else ""
+        print("Market research task completed.")
+        return self.state.market_research_result
+
+    @listen("initial_task")
+    async def analyze_competitors(self):
+        """
+        Starts the competitor analysis task from the Research Crew, triggered by the initial task.
+        """
+        print("Starting competitor analysis task.")
+        competitor_analysis_result = await Crew(
+            agents=[ResearchCrew().competitor_analyst()],
+            tasks=[ResearchCrew().analyze_competitors()]
+        ).kickoff_async(inputs={
+            "industry_topic": "Artificial Intelligence",
+            "current_year": "2025"
+        })
+        self.state.competitor_analysis_result = competitor_analysis_result.raw if competitor_analysis_result else ""
+        print("Competitor analysis task completed.")
+        return self.state.competitor_analysis_result
+
+    @listen("initial_task")
+    async def analyze_feedback(self):
+        """
+        Starts the feedback analysis task from the Content Crew, triggered by the initial task.
+        """
+        print("Starting feedback analysis task.")
+        content_feedback_result = await Crew(
+            agents=[ContentCrew().feedback_analyst()],
+            tasks=[ContentCrew().analyze_feedback()]
+        ).kickoff_async(inputs={
+            "content_topic": "AI in Marketing",
+            "current_year": "2025"
+        })
+        self.state.content_feedback_result = content_feedback_result.raw if content_feedback_result else ""
+        print("Feedback analysis task completed.")
+        return self.state.content_feedback_result
+
+    @listen(and_("analyze_market", "analyze_competitors", "analyze_feedback"))
+    def combine_results(self):
+        """
+        Combines the results from the market research, competitor analysis, and feedback analysis tasks.
+        """
+        print("Combining results from all tasks.")
+        self.state.combined_output = (
+            f"Market Research Result:\n{self.state.market_research_result}\n\n"
+            f"Competitor Analysis Result:\n{self.state.competitor_analysis_result}\n\n"
+            f"Content Feedback Analysis Result:\n{self.state.content_feedback_result}"
+        )
+        print("\nCombined Results:\n", self.state.combined_output)
+        return self.state.combined_output
+
+
+def plot():
+    parallel_listen_flow = ParallelListenFlow()
+    parallel_listen_flow.plot()
+
+
+================================================
+File: /crewai_parallel_patterns/flows/parallel_start_flow.py
+================================================
+import asyncio
+
+from crewai.crew import Crew
+from crewai.flow.flow import Flow, and_, listen, router, start
+from pydantic import BaseModel
+
+from ..crews.content_crew import ContentCrew
+from ..crews.research_crew import ResearchCrew
+
+
+# Define a state class to hold data that can be shared/accessed between tasks in the flow
+class ParallelFlowState(BaseModel):
+    content_crew_research_output: str = ""
+    content_crew_ideas_output: str = ""
+    research_crew_trends_output: str = ""
+    research_crew_competitors_output: str = ""
+
+
+class ParallelStartFlow(Flow[ParallelFlowState]):
+    """
+    Flow demonstrating parallel execution of tasks from different crews using @start.
+    """
+
+    def __init__(self):
+        super().__init__(
+            description="This flow executes tasks from Content and Research Crews in parallel.",
+            state_type=ParallelFlowState
+        )
+
+    @start()
+    async def research_market_and_trends(self):
+        """Starts the market research task of the Content Crew."""
+        print("Starting market research task from Content Crew")
+        research_result = await Crew(
+            agents=[ContentCrew().market_researcher()],
+            tasks=[ContentCrew().research_market()]
+        ).kickoff_async(
+            inputs={"content_topic": "AI in Content Creation", "current_year": "2025"}
+        )
+        self.state.content_crew_research_output = research_result if research_result else ""
+
+    @start()
+    async def brainstorm_ideas_and_analyze_competitors(self):
+        """Starts the trends analysis task of the ResearchCrew Crew."""
+        print("Starting trends analysis task from Research Crew")
+        research_result = await Crew(
+            agents=[ResearchCrew().trend_analyst()],
+            tasks=[ResearchCrew().analyze_trends()]
+        ).kickoff_async(
+            inputs={"industry_topic": "Artificial Intelligence", "current_year": "2025"}
+        )
+        self.state.content_crew_ideas_output = research_result if research_result else ""
+
+    @listen(and_("research_market_and_trends", "brainstorm_ideas_and_analyze_competitors"))
+    async def combine_results(self):
+        results = f"Market Research: {self.state.content_crew_research_output}\n" \
+                  f"Idea Brainstorming: {self.state.content_crew_ideas_output}"
+        print("\nCombined Results:\n", results)
+        return results
+
+
+def plot():
+    parallel_start_flow = ParallelStartFlow()
+    parallel_start_flow.plot()
+
+
+================================================
+File: /crewai_parallel_patterns/flows/__init__.py
+================================================
+from .parallel_start_flow import ParallelStartFlow
+from .parallel_listen_flow import ParallelListenFlow
+
+__all__ = [
+    "ParallelStartFlow",
+    "ParallelListenFlow"
+]
+

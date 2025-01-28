@@ -1,0 +1,16 @@
+analyze_trends:
+  description: >
+    Identify and analyze the major trends shaping the {industry_topic} industry.
+    Focus on technological advancements, emerging markets, regulatory changes, and evolving consumer preferences.
+    The current year is {current_year}.
+  expected_output: >
+    A detailed report outlining the key trends in the {industry_topic} industry, supported by data and analysis. The report should highlight the potential impact of these trends on businesses and consumers.
+  agent: trend_analyst
+
+analyze_competitors:
+  description: >
+    Research and analyze the strategies of key competitors in the {industry_topic} industry.
+    Examine their product offerings, marketing campaigns, pricing strategies, distribution channels, and overall market positioning.
+  expected_output: >
+    A comprehensive analysis of the competitive landscape in the {industry_topic} industry. The report should identify key competitors, their strengths and weaknesses, and their strategic approaches to the market.
+  agent: competitor_analyst
