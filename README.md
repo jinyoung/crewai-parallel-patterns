@@ -106,3 +106,85 @@ The `ParallelListenFlow` example demonstrates the use of `@listen` to trigger ta
 ### 5. Parallel Execution of Multiple Flows
 
 This example shows how to run multiple flows concurrently using `asyncio.gather()`, allowing for complex, multi-stage workflows to be executed in parallel.
+
+
+# 한국어 설명
+
+1. **전체 아키텍처**
+- 이 시스템은 CrewAI를 기반으로 한 병렬 처리 패턴을 구현한 프레임워크입니다.
+- 크게 두 가지 주요 컴포넌트로 구성됩니다:
+  - Crews: 특정 도메인의 작업을 수행하는 에이전트 그룹
+  - Flows: 작업의 흐름을 관리하는 패턴
+
+2. **주요 Crew 구성**
+- **ContentCrew**: 콘텐츠 생성에 특화된 crew
+  - 입력: content_topic, current_year, target_audience, content_type, word_count
+  - 목적: 특정 주제에 대한 콘텐츠 생성
+
+- **ResearchCrew**: 리서치에 특화된 crew
+  - 입력: industry_topic, current_year
+  - 목적: 특정 산업/주제에 대한 리서치 수행
+
+3. **병렬 처리 패턴**
+시스템은 5가지 주요 병렬 처리 패턴을 구현하고 있습니다:
+
+a) **Content Crew 내부 병렬 처리**
+```python
+async def run_parallel_tasks_in_content_crew():
+    content_crew = ContentCrew().crew()
+    result = await content_crew.kickoff_async(inputs=inputs)
+```
+- ContentCrew 내부의 여러 작업들이 비동기적으로 실행됩니다.
+
+b) **여러 Crew의 병렬 실행**
+```python
+async def run_parallel_execution_of_multiple_crews():
+    results = await asyncio.gather(
+        content_crew.kickoff_async(inputs=content_crew_inputs),
+        research_crew.kickoff_async(inputs=research_crew_inputs),
+    )
+```
+- ContentCrew와 ResearchCrew가 동시에 실행되어 결과를 병렬로 수집합니다.
+
+c) **Flow 내부의 병렬 실행**
+```python
+def run_parallel_execution_with_start_flow():
+    flow = ParallelStartFlow()
+    final_output = flow.kickoff()
+```
+- @start() 데코레이터를 사용하여 Flow 내부의 작업들을 병렬로 실행합니다.
+
+d) **Flow의 분기 처리**
+```python
+def run_branching_with_listen_flow():
+    flow = ParallelListenFlow()
+    final_output = flow.kickoff()
+```
+- @listen 데코레이터를 사용하여 Flow 내에서 조건에 따른 분기 처리를 수행합니다.
+
+e) **여러 Flow의 병렬 실행**
+```python
+async def run_parallel_execution_of_multiple_flows():
+    results = await asyncio.gather(
+        start_flow.kickoff_async(),
+        listen_flow.kickoff_async(),
+    )
+```
+- 여러 Flow를 동시에 실행하여 결과를 병렬로 수집합니다.
+
+4. **작동 프로세스**
+1. 사용자가 특정 주제나 산업에 대한 레포트 생성을 요청
+2. 시스템은 자동으로:
+   - ContentCrew를 통해 관련 콘텐츠 생성
+   - ResearchCrew를 통해 관련 리서치 수행
+   - 각 Crew 내부의 작업들은 병렬로 처리
+   - 여러 Flow를 통해 작업의 흐름을 관리하고 분기 처리
+3. 모든 결과가 수집되면 최종 레포트로 통합
+
+5. **장점**
+- **효율성**: 병렬 처리를 통해 작업 시간 단축
+- **확장성**: 새로운 Crew나 Flow를 쉽게 추가 가능
+- **유연성**: 다양한 패턴의 병렬 처리 지원
+- **모듈성**: 각 Crew와 Flow가 독립적으로 작동
+
+이 시스템은 CrewAI의 강력한 기능을 활용하여 복잡한 레포트 생성 작업을 효율적으로 수행할 수 있도록 설계되었습니다. 각각의 Crew와 Flow는 독립적으로 작동하면서도 전체적으로는 조화롭게 협력하여 최종 결과물을 만들어냅니다.
